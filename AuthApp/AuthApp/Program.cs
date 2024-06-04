@@ -23,6 +23,8 @@ namespace AuthApp
             builder.RegisterType<PermissionGroupService>().As<IPermissionGroupService>().InstancePerLifetimeScope();
             builder.RegisterType<AuthService>().As<IAuthService>().InstancePerLifetimeScope();
             builder.RegisterType<ActionService>().As<IActionService>().InstancePerLifetimeScope();
+            builder.RegisterType<ResourceService>().As<IResourceService>().InstancePerLifetimeScope();
+            builder.RegisterType<UserService>().As<IUserService>().InstancePerLifetimeScope();
             builder.RegisterInstance(config).As<IConfiguration>().SingleInstance();
             builder.RegisterType<Login>().InstancePerLifetimeScope();
             var container = builder.Build();

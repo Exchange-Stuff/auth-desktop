@@ -1,19 +1,25 @@
 ﻿using AuthApp.Service.DTOs;
+using AuthApp.Service.Models;
 using AuthApp.Service.Services;
+using System.ComponentModel.Design;
 
 namespace AuthApp
 {
     public partial class Home : Form
     {
+        private readonly IUserService _userService;
         private readonly IActionService _actionService;
         private readonly IPermissionGroupService _permissionGroupService;
+        private readonly Service.Services.IResourceService _resourceService;
         private List<PermissionDTO> _permissionDTOs = null!;
         private List<PermissionGroupDTO> _permissionGroupDTOs = null!;
-        public Home(IPermissionGroupService permissionGroupService, IActionService actionService)
+        public Home(IPermissionGroupService permissionGroupService, IActionService actionService, Service.Services.IResourceService resourceService, IUserService userService)
         {
             InitializeComponent();
+            _userService = userService;
             _actionService = actionService;
             _permissionGroupService = permissionGroupService;
+            _resourceService = resourceService;
             LoadData();
         }
 
@@ -212,6 +218,21 @@ namespace AuthApp
             catch (Exception ex)
             {
                 MessageBox.Show($"Some problem happened, detail: " + ex.Message);
+            }
+        }
+
+        private  void toolStripAddGroup_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                PermissionGroupName permissionGroupName = new PermissionGroupName(_permissionGroupService, _userService, _actionService, _resourceService);
+                permissionGroupName.ShowDialog();
+                LoadData();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Some problem happened, detail: " + ex.Message);
+                return;
             }
         }
     }

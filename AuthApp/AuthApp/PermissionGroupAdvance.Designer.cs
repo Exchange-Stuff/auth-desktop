@@ -40,17 +40,17 @@
             dtgvPermissions.AllowUserToDeleteRows = false;
             dtgvPermissions.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dtgvPermissions.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dtgvPermissions.Location = new Point(12, 12);
+            dtgvPermissions.Location = new Point(6, 5);
             dtgvPermissions.Name = "dtgvPermissions";
             dtgvPermissions.SelectionMode = DataGridViewSelectionMode.CellSelect;
-            dtgvPermissions.Size = new Size(529, 266);
+            dtgvPermissions.Size = new Size(545, 273);
             dtgvPermissions.TabIndex = 0;
             dtgvPermissions.CellValueChanged += dtgvPermissions_CellValueChanged;
             dtgvPermissions.CurrentCellDirtyStateChanged += dtgvPermissions_CurrentCellDirtyStateChanged;
             // 
             // btnSave
             // 
-            btnSave.Location = new Point(466, 284);
+            btnSave.Location = new Point(476, 284);
             btnSave.Name = "btnSave";
             btnSave.Size = new Size(75, 23);
             btnSave.TabIndex = 1;
@@ -60,7 +60,7 @@
             // 
             // txbSearchResource
             // 
-            txbSearchResource.Location = new Point(12, 284);
+            txbSearchResource.Location = new Point(6, 284);
             txbSearchResource.Name = "txbSearchResource";
             txbSearchResource.Size = new Size(135, 23);
             txbSearchResource.TabIndex = 2;
@@ -70,7 +70,7 @@
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(553, 324);
+            ClientSize = new Size(556, 324);
             Controls.Add(txbSearchResource);
             Controls.Add(btnSave);
             Controls.Add(dtgvPermissions);

@@ -11,11 +11,40 @@ namespace AuthApp.Service.Services
         Task<List<PermissionGroupDTO>> GetPermissionGroupDTOs();
         Task<List<PermissionDTO>> GetPermissionDTO();
         Task<bool> UpdateGroupPermission(UpdatePermissionGroupModel updatePermissionGroupModel);
+        Task<bool> CreatePermissionGroup(CreatePermissionGroupModel createPermissionGroupModel);
     }
 
     public class PermissionGroupService : IPermissionGroupService
     {
         private string _mediaType = "application/json";
+
+        public async Task<bool> CreatePermissionGroup(CreatePermissionGroupModel createPermissionGroupModel)
+        {
+            using (HttpClient http = new HttpClient())
+            {
+                var param = createPermissionGroupModel;
+                string paramString = JsonConvert.SerializeObject(param);
+                StringContent stringContent = new StringContent(paramString, System.Text.Encoding.UTF8, _mediaType);
+                HttpResponseMessage httpResponse = await http.PostAsync(EndpointAPI.PERMISSION_GROUP_POST, stringContent);
+                if (httpResponse.IsSuccessStatusCode)
+                {
+                    string resultString = await httpResponse.Content.ReadAsStringAsync();
+                    if (!string.IsNullOrEmpty(resultString))
+                    {
+                        JObject jobj = JObject.Parse(resultString);
+                        if ((jobj["isSuccess"] + "").ToLower() == "true")
+                        {
+                            return true;
+                        }
+                    }
+                }
+                else
+                {
+                    throw new Exception("Server has problem, can't update");
+                }
+            }
+            return false;
+        }
 
         public async Task<List<PermissionDTO>> GetPermissionDTO()
         {

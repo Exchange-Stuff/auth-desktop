@@ -14,24 +14,28 @@ namespace AuthApp
 {
     public partial class Login : Form
     {
+        private readonly IResourceService _resourceService;
+        private readonly IUserService _userService;
         private readonly IActionService _actionService;
         private readonly IAuthService _authService;
         private readonly IPermissionGroupService _permissionGroupService;
 
-        public Login(IAuthService authService, IPermissionGroupService permissionGroupService, IActionService actionService)
+        public Login(IAuthService authService, IPermissionGroupService permissionGroupService, IActionService actionService, IResourceService resourceService, IUserService userService)
         {
             InitializeComponent();
-            _actionService=actionService;
+            _resourceService = resourceService;
+            _userService = userService;
+            _actionService = actionService;
             _authService = authService;
             _permissionGroupService = permissionGroupService;
         }
         private void VisibleControl(bool value)
         {
-            label1.Visible=value;
-            label2.Visible=value;
-            txbUsername.Visible=value;
-            txbPassword.Visible=value;
-            btnLogin.Visible=value;
+            label1.Visible = value;
+            label2.Visible = value;
+            txbUsername.Visible = value;
+            txbPassword.Visible = value;
+            btnLogin.Visible = value;
             progressBar1.Visible = !value;
         }
         private async void btnLogin_Click(object sender, EventArgs e)
@@ -62,7 +66,7 @@ namespace AuthApp
                     }
                     else
                     {
-                        Home home = new Home(_permissionGroupService, _actionService);
+                        Home home = new Home(_permissionGroupService, _actionService, _resourceService, _userService);
                         VisibleControl(true);
                         home.ShowDialog();
                         this.Close();

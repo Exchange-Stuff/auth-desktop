@@ -31,7 +31,7 @@
             btnRefresh = new Button();
             menuStrip1 = new MenuStrip();
             groupsToolStripMenuItem = new ToolStripMenuItem();
-            manageToolStripMenuItem = new ToolStripMenuItem();
+            toolStripAddGroup = new ToolStripMenuItem();
             usersToolStripMenuItem = new ToolStripMenuItem();
             userPermissionToolStripMenuItem = new ToolStripMenuItem();
             actionsToolStripMenuItem = new ToolStripMenuItem();
@@ -72,16 +72,17 @@
             // 
             // groupsToolStripMenuItem
             // 
-            groupsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { manageToolStripMenuItem });
+            groupsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { toolStripAddGroup });
             groupsToolStripMenuItem.Name = "groupsToolStripMenuItem";
             groupsToolStripMenuItem.Size = new Size(57, 20);
             groupsToolStripMenuItem.Text = "Groups";
             // 
-            // manageToolStripMenuItem
+            // toolStripAddGroup
             // 
-            manageToolStripMenuItem.Name = "manageToolStripMenuItem";
-            manageToolStripMenuItem.Size = new Size(180, 22);
-            manageToolStripMenuItem.Text = "Add";
+            toolStripAddGroup.Name = "toolStripAddGroup";
+            toolStripAddGroup.Size = new Size(180, 22);
+            toolStripAddGroup.Text = "Add";
+            toolStripAddGroup.Click += toolStripAddGroup_Click;
             // 
             // usersToolStripMenuItem
             // 
@@ -234,7 +235,7 @@
         private ToolStripMenuItem actionsToolStripMenuItem;
         private Label label1;
         private Label label2;
-        private ToolStripMenuItem manageToolStripMenuItem;
+        private ToolStripMenuItem toolStripAddGroup;
         private ToolStripMenuItem manageToolStripMenuItem1;
         private ToolStripMenuItem logoutToolStripMenuItem;
         private DataGridView dtgvPermissionGroup;
