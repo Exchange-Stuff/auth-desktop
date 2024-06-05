@@ -12,6 +12,7 @@ namespace AuthApp.Service.Services
         Task<List<PermissionDTO>> GetPermissionDTO();
         Task<bool> UpdateGroupPermission(UpdatePermissionGroupModel updatePermissionGroupModel);
         Task<bool> CreatePermissionGroup(CreatePermissionGroupModel createPermissionGroupModel);
+        Task<bool> UpdateResourceGroupPermission(UpdatePermissionGroupModel updatePermissionGroupModel);
     }
 
     public class PermissionGroupService : IPermissionGroupService
@@ -114,6 +115,33 @@ namespace AuthApp.Service.Services
                 string paramString = JsonConvert.SerializeObject(param);
                 StringContent stringContent = new StringContent(paramString, System.Text.Encoding.UTF8, _mediaType);
                 HttpResponseMessage httpResponse = await http.PutAsync(EndpointAPI.PERMISSIONS_UPDATE_RANGE, stringContent);
+                if (httpResponse.IsSuccessStatusCode)
+                {
+                    string resultString = await httpResponse.Content.ReadAsStringAsync();
+                    if (!string.IsNullOrEmpty(resultString))
+                    {
+                        JObject jobj = JObject.Parse(resultString);
+                        if ((jobj["isSuccess"] + "").ToLower() == "true")
+                        {
+                            return true;
+                        }
+                    }
+                }
+                else
+                {
+                    throw new Exception("Server has problem, can't update");
+                }
+            }
+            return false;
+        }
+        public async Task<bool> UpdateResourceGroupPermission(UpdatePermissionGroupModel updatePermissionGroupModel)
+        {
+            using (HttpClient http = new HttpClient())
+            {
+                var param = updatePermissionGroupModel;
+                string paramString = JsonConvert.SerializeObject(param);
+                StringContent stringContent = new StringContent(paramString, System.Text.Encoding.UTF8, _mediaType);
+                HttpResponseMessage httpResponse = await http.PostAsync(EndpointAPI.PERMISSION_GROUP_RESOURCE_POST, stringContent);
                 if (httpResponse.IsSuccessStatusCode)
                 {
                     string resultString = await httpResponse.Content.ReadAsStringAsync();

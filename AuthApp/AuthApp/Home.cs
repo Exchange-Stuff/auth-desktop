@@ -221,7 +221,7 @@ namespace AuthApp
             }
         }
 
-        private  void toolStripAddGroup_Click(object sender, EventArgs e)
+        private void toolStripAddGroup_Click(object sender, EventArgs e)
         {
             try
             {
@@ -233,6 +233,53 @@ namespace AuthApp
             {
                 MessageBox.Show("Some problem happened, detail: " + ex.Message);
                 return;
+            }
+        }
+
+        private async void btnChange_Click(object sender, EventArgs e)
+        {
+            if (dtgvPermissionGroup.SelectedCells.Count > 0)
+            {
+                Guid permissionGroupId = (Guid)dtgvPermissionGroup.Rows[dtgvPermissionGroup.SelectedCells[0].RowIndex].Tag!;
+                if (permissionGroupId != Guid.Empty)
+                {
+                    var permissionGroup = _permissionGroupDTOs.FirstOrDefault(x => x.Id == permissionGroupId)!;
+                    if (permissionGroup != null)
+                    {
+                        var resources = await _resourceService.GetResources();
+                        var permissionOfGroup = await _permissionGroupService.GetPermissionDTO();
+                        if (permissionOfGroup.Any())
+                        {
+                            List<UpdateResourcePermissionGroupModel> updateResourcePermissionGroupModels = new List<UpdateResourcePermissionGroupModel>();
+                            foreach (var item in resources)
+                            {
+                                var pNow = permissionOfGroup.FirstOrDefault(x => x.Resource.Id == item.Id && x.Role.Id == permissionGroupId)!;
+                                UpdateResourcePermissionGroupModel updateResourcePermissionGroupModel = new UpdateResourcePermissionGroupModel
+                                {
+                                    ResourceId = item.Id,
+                                    ResourceName = item.Name,
+                                    FullControl = false,
+                                    PermissionValue = 0,
+                                    Selected = false
+                                };
+                                if (pNow != null!)
+                                {
+                                    updateResourcePermissionGroupModel.PermissionValue = pNow.PermissionValue;
+                                    updateResourcePermissionGroupModel.Selected = true;
+                                }
+                                updateResourcePermissionGroupModels.Add(updateResourcePermissionGroupModel);
+                            }
+                            UpdatePermissionGroup updatePermissionGroup = new UpdatePermissionGroup(_permissionGroupService);
+                            updatePermissionGroup.PermissionGroupId = permissionGroupId;
+                            updatePermissionGroup.lbPermissionGroupName.Text = permissionGroup.Name;
+                            updatePermissionGroup.UpdateResourcePermissionGroupModels = updateResourcePermissionGroupModels;
+                            updatePermissionGroup.ActionDTOs = await _actionService.GetActions();
+                            updatePermissionGroup.LoadPermission(updateResourcePermissionGroupModels);
+                            updatePermissionGroup.ShowDialog();
+                            LoadData();
+                        }
+                    }
+                }
             }
         }
     }

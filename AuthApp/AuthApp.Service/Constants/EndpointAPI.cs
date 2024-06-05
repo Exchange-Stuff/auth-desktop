@@ -120,5 +120,7 @@
         public const string RESOURCES_GET = "http://localhost:5188/api/SuperAdmin/resources";
 
         public const string PERMISSION_GROUP_POST = "http://localhost:5188/api/SuperAdmin/create/role/value";
+
+        public const string PERMISSION_GROUP_RESOURCE_POST = "http://localhost:5188/api/SuperAdmin/create/permission";
     }
 }

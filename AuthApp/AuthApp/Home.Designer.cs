@@ -45,6 +45,7 @@
             dtgvPermissionGroup = new DataGridView();
             dtgvPermissions = new DataGridView();
             btnAdvance = new Button();
+            btnChange = new Button();
             menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dtgvPermissionGroup).BeginInit();
             ((System.ComponentModel.ISupportInitialize)dtgvPermissions).BeginInit();
@@ -80,7 +81,7 @@
             // toolStripAddGroup
             // 
             toolStripAddGroup.Name = "toolStripAddGroup";
-            toolStripAddGroup.Size = new Size(180, 22);
+            toolStripAddGroup.Size = new Size(96, 22);
             toolStripAddGroup.Text = "Add";
             toolStripAddGroup.Click += toolStripAddGroup_Click;
             // 
@@ -190,7 +191,7 @@
             // 
             // btnAdvance
             // 
-            btnAdvance.Location = new Point(251, 341);
+            btnAdvance.Location = new Point(280, 342);
             btnAdvance.Name = "btnAdvance";
             btnAdvance.Size = new Size(75, 25);
             btnAdvance.TabIndex = 10;
@@ -198,11 +199,22 @@
             btnAdvance.UseVisualStyleBackColor = true;
             btnAdvance.Click += btnAdvance_Click;
             // 
+            // btnChange
+            // 
+            btnChange.Location = new Point(194, 342);
+            btnChange.Name = "btnChange";
+            btnChange.Size = new Size(75, 25);
+            btnChange.TabIndex = 11;
+            btnChange.Text = "Change";
+            btnChange.UseVisualStyleBackColor = true;
+            btnChange.Click += btnChange_Click;
+            // 
             // Home
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 380);
+            Controls.Add(btnChange);
             Controls.Add(btnAdvance);
             Controls.Add(dtgvPermissions);
             Controls.Add(dtgvPermissionGroup);
@@ -241,5 +253,6 @@
         private DataGridView dtgvPermissionGroup;
         private DataGridView dtgvPermissions;
         private Button btnAdvance;
+        private Button btnChange;
     }
 }
