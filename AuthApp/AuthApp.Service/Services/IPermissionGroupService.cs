@@ -1,6 +1,7 @@
 ﻿using AuthApp.Service.Constants;
 using AuthApp.Service.DTOs;
 using AuthApp.Service.Models;
+using AuthApp.Service.Statics;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -13,20 +14,33 @@ namespace AuthApp.Service.Services
         Task<bool> UpdateGroupPermission(UpdatePermissionGroupModel updatePermissionGroupModel);
         Task<bool> CreatePermissionGroup(CreatePermissionGroupModel createPermissionGroupModel);
         Task<bool> UpdateResourceGroupPermission(UpdatePermissionGroupModel updatePermissionGroupModel);
+        Task Logout();
     }
 
     public class PermissionGroupService : IPermissionGroupService
     {
         private string _mediaType = "application/json";
-
+        public async Task Logout()
+        {
+            using (HttpClient http = new HttpClient())
+            {
+                http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", TokenValue.Token);
+                HttpResponseMessage httpResponse = await http.PostAsync(EndpointAPI.LOGOUT_POST, null!);
+            }
+        }
         public async Task<bool> CreatePermissionGroup(CreatePermissionGroupModel createPermissionGroupModel)
         {
             using (HttpClient http = new HttpClient())
             {
+                http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", TokenValue.Token);
+
                 var param = createPermissionGroupModel;
                 string paramString = JsonConvert.SerializeObject(param);
                 StringContent stringContent = new StringContent(paramString, System.Text.Encoding.UTF8, _mediaType);
                 HttpResponseMessage httpResponse = await http.PostAsync(EndpointAPI.PERMISSION_GROUP_POST, stringContent);
+
+                if (httpResponse.StatusCode == System.Net.HttpStatusCode.Unauthorized) throw new UnauthorizedAccessException("Login session expired");
+
                 if (httpResponse.IsSuccessStatusCode)
                 {
                     string resultString = await httpResponse.Content.ReadAsStringAsync();
@@ -51,7 +65,10 @@ namespace AuthApp.Service.Services
         {
             using (HttpClient client = new HttpClient())
             {
-                HttpResponseMessage response = await client.GetAsync(EndpointAPI.PERMISSION_GET);
+                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", TokenValue.Token);
+
+                HttpResponseMessage response = await client.GetAsync(EndpointAPI.PERMISSIONS_GET);
+                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized) throw new UnauthorizedAccessException("Login session expired");
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -81,7 +98,10 @@ namespace AuthApp.Service.Services
         {
             using (HttpClient client = new HttpClient())
             {
-                HttpResponseMessage response = await client.GetAsync(EndpointAPI.PERMISSION_GROUP_GET);
+                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", TokenValue.Token);
+
+                HttpResponseMessage response = await client.GetAsync(EndpointAPI.PERMISSION_GROUPS_GET);
+                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized) throw new UnauthorizedAccessException("Login session expired");
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -111,10 +131,15 @@ namespace AuthApp.Service.Services
         {
             using (HttpClient http = new HttpClient())
             {
+                http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", TokenValue.Token);
+
                 var param = updatePermissionGroupModel;
                 string paramString = JsonConvert.SerializeObject(param);
                 StringContent stringContent = new StringContent(paramString, System.Text.Encoding.UTF8, _mediaType);
-                HttpResponseMessage httpResponse = await http.PutAsync(EndpointAPI.PERMISSIONS_UPDATE_RANGE, stringContent);
+                HttpResponseMessage httpResponse = await http.PutAsync(EndpointAPI.PERMISSIONS_UPDATE, stringContent);
+
+                if (httpResponse.StatusCode == System.Net.HttpStatusCode.Unauthorized) throw new UnauthorizedAccessException("Login session expired");
+
                 if (httpResponse.IsSuccessStatusCode)
                 {
                     string resultString = await httpResponse.Content.ReadAsStringAsync();
@@ -138,10 +163,15 @@ namespace AuthApp.Service.Services
         {
             using (HttpClient http = new HttpClient())
             {
+                http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", TokenValue.Token);
+
                 var param = updatePermissionGroupModel;
                 string paramString = JsonConvert.SerializeObject(param);
                 StringContent stringContent = new StringContent(paramString, System.Text.Encoding.UTF8, _mediaType);
-                HttpResponseMessage httpResponse = await http.PostAsync(EndpointAPI.PERMISSION_GROUP_RESOURCE_POST, stringContent);
+                HttpResponseMessage httpResponse = await http.PutAsync(EndpointAPI.PERMISSION_GROUP_RESOURCE_PUT, stringContent);
+
+                if (httpResponse.StatusCode == System.Net.HttpStatusCode.Unauthorized) throw new UnauthorizedAccessException("Login session expired");
+
                 if (httpResponse.IsSuccessStatusCode)
                 {
                     string resultString = await httpResponse.Content.ReadAsStringAsync();

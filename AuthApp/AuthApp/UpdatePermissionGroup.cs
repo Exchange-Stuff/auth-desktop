@@ -8,75 +8,102 @@ namespace AuthApp
 {
     public partial class UpdatePermissionGroup : Form
     {
+        private readonly IActionService _actionService;
         private readonly IPermissionGroupService _permissionGroupService;
-
         public List<ActionDTO> ActionDTOs { get; set; } = new List<ActionDTO>();
+        private int _maxValueAction = 0;
         public List<UpdateResourcePermissionGroupModel> UpdateResourcePermissionGroupModelsAdded { get; set; } = new List<UpdateResourcePermissionGroupModel>();
         /// <summary>
         /// Pass form parent control
         /// </summary>
         public List<UpdateResourcePermissionGroupModel> UpdateResourcePermissionGroupModels { get; set; } = new List<UpdateResourcePermissionGroupModel>();
-        private bool _isUpdated { get; set; } = false;
+        private bool _isUpdated = true;
         /// <summary>
         /// Pass from parent control
         /// </summary>
         public Guid PermissionGroupId { get; set; }
 
-        public UpdatePermissionGroup(IPermissionGroupService permissionGroupService)
+        public UpdatePermissionGroup(IPermissionGroupService permissionGroupService, IActionService actionService)
         {
             InitializeComponent();
+            _actionService = actionService;
             _permissionGroupService = permissionGroupService;
+            Application.ApplicationExit += new EventHandler(Cut);
         }
-        public void LoadPermission(List<UpdateResourcePermissionGroupModel> updateResourcePermissionGroups)
+
+        private async void Cut(object sender, EventArgs e)
         {
-            dtgvPermission.DataSource = null;
-            dtgvPermission.AllowUserToAddRows = false;
-            dtgvPermission.Columns.Clear();
-            dtgvPermission.Rows.Clear();
-
-            dtgvPermission.Columns.Add("Resource", "Resource");
-
-            DataGridViewCheckBoxColumn dataGridViewCheckBoxColumn = new DataGridViewCheckBoxColumn
+            await _permissionGroupService.Logout();
+            Application.Exit();
+        }
+        public async void LoadPermission(List<UpdateResourcePermissionGroupModel> updateResourcePermissionGroups)
+        {
+            try
             {
-                HeaderText = "Select",
-                Name = "Select"
-            };
-            dtgvPermission.Columns.Add(dataGridViewCheckBoxColumn);
-            DataGridViewCheckBoxColumn dataGridViewCheckBoxColumn1 = new DataGridViewCheckBoxColumn
-            {
-                HeaderText = "Full",
-                Name = "Full"
-            };
-            dtgvPermission.Columns.Add(dataGridViewCheckBoxColumn1);
-
-            ActionDTOs = ActionDTOs.OrderBy(x => x.Index).ToList();
-            foreach (var item in ActionDTOs)
-            {
-                DataGridViewCheckBoxColumn dataGridViewCheckBoxColumn2 = new DataGridViewCheckBoxColumn
+                var actions = await _actionService.GetActions();
+                if (actions != null)
                 {
-                    HeaderText = item.Name,
-                    Name = item.Name
-                };
-                dtgvPermission.Columns.Add(dataGridViewCheckBoxColumn2);
-            }
-
-            foreach (var item in updateResourcePermissionGroups)
-            {
-                DataGridViewRow dtr = new DataGridViewRow();
-                dtr.CreateCells(dtgvPermission);
-                dtr.Cells[0].Value = item.ResourceName;
-                dtr.Cells[1].Value = item.Selected;
-                dtr.Cells[2].Value = item.FullControl;
-
-                char[] permissionValue = ReverseString(DecimalToBinary(item.PermissionValue));
-                int count = 3;
-                foreach (var item1 in permissionValue)
-                {
-                    dtr.Cells[count].Value = item1 == '1' ? true : false;
-                    count++;
+                    _maxValueAction = actions.Sum(x => x.Value);
                 }
-                dtr.Tag = item.ResourceId;
-                dtgvPermission.Rows.Add(dtr);
+                dtgvPermission.DataSource = null;
+                dtgvPermission.AllowUserToAddRows = false;
+                dtgvPermission.Columns.Clear();
+                dtgvPermission.Rows.Clear();
+
+                dtgvPermission.Columns.Add("Resource", "Resource");
+
+                DataGridViewCheckBoxColumn dataGridViewCheckBoxColumn = new DataGridViewCheckBoxColumn
+                {
+                    HeaderText = "Select",
+                    Name = "Select"
+                };
+                dtgvPermission.Columns.Add(dataGridViewCheckBoxColumn);
+                DataGridViewCheckBoxColumn dataGridViewCheckBoxColumn1 = new DataGridViewCheckBoxColumn
+                {
+                    HeaderText = "Full",
+                    Name = "Full"
+                };
+                dtgvPermission.Columns.Add(dataGridViewCheckBoxColumn1);
+
+                ActionDTOs = ActionDTOs.OrderBy(x => x.Index).ToList();
+                foreach (var item in ActionDTOs)
+                {
+                    DataGridViewCheckBoxColumn dataGridViewCheckBoxColumn2 = new DataGridViewCheckBoxColumn
+                    {
+                        HeaderText = item.Name,
+                        Name = item.Name
+                    };
+                    dtgvPermission.Columns.Add(dataGridViewCheckBoxColumn2);
+                }
+
+                foreach (var item in updateResourcePermissionGroups)
+                {
+                    DataGridViewRow dtr = new DataGridViewRow();
+                    dtr.CreateCells(dtgvPermission);
+                    dtr.Cells[0].Value = item.ResourceName;
+                    dtr.Cells[1].Value = item.Selected;
+                    dtr.Cells[2].Value = item.FullControl;
+
+                    char[] permissionValue = ReverseString(DecimalToBinary(item.PermissionValue));
+                    int count = 3;
+                    foreach (var item1 in permissionValue)
+                    {
+                        dtr.Cells[count].Value = item1 == '1' ? true : false;
+                        count++;
+                    }
+                    dtr.Tag = item.ResourceId;
+                    dtgvPermission.Rows.Add(dtr);
+                }
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                MessageBox.Show(ex.Message, "Notice");
+                Application.Exit();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Some problem happened, detail: " + ex.Message);
+                return;
             }
         }
 
@@ -140,50 +167,67 @@ namespace AuthApp
 
         private void dtgvPermission_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
-            if (dtgvPermission.SelectedCells.Count > 0)
+            try
             {
-                _isUpdated = false;
-                var currentRow = dtgvPermission.Rows[e.RowIndex];
-                Guid resourceId = (Guid)dtgvPermission.Rows[e.RowIndex].Tag!;
-                bool valueCome = (bool)dtgvPermission.Rows[e.RowIndex].Cells[e.ColumnIndex].Value;
-                //Full control
-                if (e.ColumnIndex == 2)
+                if (dtgvPermission.SelectedCells.Count > 0)
                 {
-                    bool[] permission = new bool[ActionDTOs.Count];
-                    int count = 0;
-                    foreach (var item in permission)
+                    _isUpdated = false;
+                    var currentRow = dtgvPermission.Rows[e.RowIndex];
+                    Guid resourceId = (Guid)dtgvPermission.Rows[e.RowIndex].Tag!;
+                    bool valueCome = (bool)dtgvPermission.Rows[e.RowIndex].Cells[e.ColumnIndex].Value;
+                    var permissionCurrent = UpdateResourcePermissionGroupModels.FirstOrDefault(x => x.ResourceId == resourceId)!;
+                    int pvl = GetNewValue(ReverseString(DecimalToBinary(permissionCurrent.PermissionValue)), e.ColumnIndex, valueCome);
+
+                    if (e.ColumnIndex == 2)
                     {
-                        permission[count] = valueCome;
-                        count++;
+                        bool[] permission = new bool[ActionDTOs.Count];
+                        int count = 0;
+                        foreach (var item in permission)
+                        {
+                            permission[count] = valueCome;
+                            count++;
+                        }
+                        UpdateResourcePermissionGroupModels.FirstOrDefault(x => x.ResourceId == resourceId)!.Selected = pvl == 0;
+                        UpdateResourcePermissionGroupModels.FirstOrDefault(x => x.ResourceId == resourceId)!.FullControl = valueCome;
+                        UpdateResourcePermissionGroupModels.FirstOrDefault(x => x.ResourceId == resourceId)!.PermissionValue = ToPermissionValue(permission);
                     }
-                    UpdateResourcePermissionGroupModels.FirstOrDefault(x => x.ResourceId == resourceId)!.FullControl = valueCome;
-                    UpdateResourcePermissionGroupModels.FirstOrDefault(x => x.ResourceId == resourceId)!.PermissionValue = ToPermissionValue(permission);
-                }
-                else if (e.ColumnIndex == 1)
-                {
-                    if (valueCome)
+                    else if (e.ColumnIndex == 1)
                     {
-                        var resource = UpdateResourcePermissionGroupModels.FirstOrDefault(x => x.ResourceId == resourceId)!;
-                        UpdateResourcePermissionGroupModelsAdded.Add(resource);
+                        if (valueCome)
+                        {
+                            var resource = UpdateResourcePermissionGroupModels.FirstOrDefault(x => x.ResourceId == resourceId)!;
+                            UpdateResourcePermissionGroupModelsAdded.Add(resource);
+                        }
+                        else
+                        {
+                            var resource = UpdateResourcePermissionGroupModelsAdded.FirstOrDefault(x => x.ResourceId == resourceId)!;
+                            UpdateResourcePermissionGroupModelsAdded.Remove(resource);
+                        }
+                        UpdateResourcePermissionGroupModels.FirstOrDefault(x => x.ResourceId == resourceId)!.Selected = valueCome;
                     }
                     else
                     {
-                        var resource = UpdateResourcePermissionGroupModelsAdded.FirstOrDefault(x => x.ResourceId == resourceId)!;
-                        UpdateResourcePermissionGroupModelsAdded.Remove(resource);
+                        if (permissionCurrent != null)
+                        {
+                            UpdateResourcePermissionGroupModels.FirstOrDefault(x => x.ResourceId == resourceId)!.Selected = pvl != 0;
+                            UpdateResourcePermissionGroupModels.FirstOrDefault(x => x.ResourceId == resourceId)!.PermissionValue = pvl;
+                            UpdateResourcePermissionGroupModels.FirstOrDefault(x => x.ResourceId == resourceId)!.FullControl = pvl == _maxValueAction ? true : false;
+                        }
                     }
-                    UpdateResourcePermissionGroupModels.FirstOrDefault(x => x.ResourceId == resourceId)!.Selected = valueCome;
+                    LoadPermission(UpdateResourcePermissionGroupModels);
                 }
-                else
-                {
-                    var permissionCurrent = UpdateResourcePermissionGroupModels.FirstOrDefault(x => x.ResourceId == resourceId)!;
-                    if (permissionCurrent != null)
-                    {
-                        UpdateResourcePermissionGroupModels.FirstOrDefault(x => x.ResourceId == resourceId)!.PermissionValue = GetNewValue(ReverseString(DecimalToBinary(permissionCurrent.PermissionValue)), e.ColumnIndex, valueCome);
-                        UpdateResourcePermissionGroupModels.FirstOrDefault(x => x.ResourceId == resourceId)!.FullControl = valueCome;
-                    }
-                }
-                LoadPermission(UpdateResourcePermissionGroupModels);
             }
+            catch (UnauthorizedAccessException ex)
+            {
+                MessageBox.Show(ex.Message, "Notice");
+                Application.Exit();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Some problem happened, detail: " + ex.Message);
+                return;
+            }
+
         }
 
         private int GetNewValue(char[] currentPermission, int columnIndex, bool value)
@@ -275,9 +319,10 @@ namespace AuthApp
                     {
                         resourceRecords.Add(new ResourceRecord(item.ResourceId, item.PermissionValue));
                     }
-                    updatePermissionGroupModels.RoleId = PermissionGroupId;
+                    updatePermissionGroupModels.PermissionGroupId = PermissionGroupId;
                     updatePermissionGroupModels.ResourceValueRecords = resourceRecords;
                     var rs = await _permissionGroupService.UpdateResourceGroupPermission(updatePermissionGroupModels);
+                    _isUpdated = true;
                     if (rs)
                     {
                         MessageBox.Show("Update success", "Notice");
@@ -289,12 +334,29 @@ namespace AuthApp
                         return;
                     }
                 }
-                _isUpdated = true;
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                MessageBox.Show(ex.Message, "Notice");
+                Application.Exit();
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Some problem happened, details: " + ex.Message, "Notice");
+                MessageBox.Show($"Some problem happened, detail: " + ex.Message);
                 return;
+            }
+        }
+
+        private void UpdatePermissionGroup_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (!_isUpdated)
+            {
+                DialogResult result = MessageBox.Show("Do you wanna save information ?", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                if (result == DialogResult.Yes)
+                {
+                    btnSave.PerformClick();
+                    this.Close();
+                }
             }
         }
     }

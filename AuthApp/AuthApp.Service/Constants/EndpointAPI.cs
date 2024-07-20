@@ -16,7 +16,7 @@
         }
          */
         #endregion 
-        public const string SUPER_ADMIN_LOGIN_POST = "http://localhost:5188/api/SuperAdmin/login";
+        public const string SUPER_ADMIN_LOGIN_POST = "http://localhost:5059/api/Admin/login";
 
         /// <summary>
         /// role?
@@ -44,8 +44,7 @@
         }
          */
         #endregion 
-        public const string PERMISSION_GROUP_GET = "http://localhost:5188/api/SuperAdmin/roles";
-
+        public const string PERMISSION_GROUPS_GET = "http://localhost:5059/api/Admin/permissionGroups";
 
         /// <summary>
         /// NO PARAM
@@ -109,18 +108,30 @@
         }
          */
         #endregion 
-        public const string PERMISSION_GET = "http://localhost:5188/api/SuperAdmin/permissions";
+        public const string PERMISSIONS_GET = "http://localhost:5059/api/Admin/permissions";
 
-        public const string ACTIONS_GET = "http://localhost:5188/api/SuperAdmin/actions";
+        public const string ACTIONS_GET = "http://localhost:5059/api/Admin/actions";
 
-        public const string PERMISSIONS_UPDATE_RANGE = "http://localhost:5188/api/SuperAdmin/permissions";
+        public const string PERMISSIONS_UPDATE = "http://localhost:5059/api/Admin/permissionAction/value";
 
-        public const string USERS_GET = "http://localhost:5188/api/User/users";
+        public const string USERS_GET = "http://localhost:5059/api/Account/users";
 
-        public const string RESOURCES_GET = "http://localhost:5188/api/SuperAdmin/resources";
+        public const string RESOURCES_GET = "http://localhost:5059/api/Admin/resources";
 
-        public const string PERMISSION_GROUP_POST = "http://localhost:5188/api/SuperAdmin/create/role/value";
+        public const string PERMISSION_GROUP_POST = "http://localhost:5059/api/Admin/permissionGroup/value";
 
-        public const string PERMISSION_GROUP_RESOURCE_POST = "http://localhost:5188/api/SuperAdmin/create/permission";
+        public const string PERMISSION_GROUP_RESOURCE_PUT = "http://localhost:5059/api/Admin/permissionGroup/permissions";
+
+        public const string PERMISSION_GROUP_USER_UPDATE = "http://localhost:5059/api/Admin/accounts/permissionGroup";
+
+        public const string ACTION_POST = "http://localhost:5059/api/Admin/action";
+
+        public const string RESOURCE_POST = "http://localhost:5059/api/Admin/resource";
+
+        public const string LOGOUT_POST = "http://localhost:5059/api/Admin/logout";
+
+        public const string CREATE_ACCOUNT_POST = "http://localhost:5059/api/Admin/create/account";
+
+        public const string ACCOUNTS_GET = "http://localhost:5059/api/Account/accounts";
     }
 }

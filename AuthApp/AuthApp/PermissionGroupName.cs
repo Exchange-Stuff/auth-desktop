@@ -26,43 +26,63 @@ namespace AuthApp
             _actionService = actionService;
             _userService = userService;
             _permissionGroupService = permissionGroupService;
+            Application.ApplicationExit += new EventHandler(Cut);
         }
 
+        private async void Cut(object sender, EventArgs e)
+        {
+            await _permissionGroupService.Logout();
+            Application.Exit();
+        }
         private async void btnNext_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrEmpty((txbName.Name + "").Trim()))
+            try
             {
-                MessageBox.Show("Name is required", "Notice");
-                return;
-            }
-            var permissionGroup = await _permissionGroupService.GetPermissionGroupDTOs();
-            if (permissionGroup != null && permissionGroup.Count > 0)
-            {
-                var check = permissionGroup.Where(x => x.Name.ToLower().Equals(txbName.Text.ToLower())).ToList();
-                if (check.Count > 0)
+                if (string.IsNullOrEmpty((txbName.Name + "").Trim()))
                 {
-                    MessageBox.Show("Group name already contain", "Notice");
+                    MessageBox.Show("Name is required", "Notice");
                     return;
                 }
-                var resources = await _resourceService.GetResources();
-                List<PermissionResourceAddModel> permissionResourceAddModels = new List<PermissionResourceAddModel>();
-                foreach (var item in resources)
+                var permissionGroup = await _permissionGroupService.GetPermissionGroupDTOs();
+                if (permissionGroup != null && permissionGroup.Count > 0)
                 {
-                    permissionResourceAddModels.Add(new PermissionResourceAddModel
+                    var check = permissionGroup.Where(x => x.Name.ToLower().Equals(txbName.Text.ToLower())).ToList();
+                    if (check.Count > 0)
                     {
-                        PermissionValue = 0,
-                        ResourceId = item.Id,
-                        ResourceName = item.Name
-                    });
+                        MessageBox.Show("Group name already contain", "Notice");
+                        return;
+                    }
+                    var resources = await _resourceService.GetResources();
+                    List<PermissionResourceAddModel> permissionResourceAddModels = new List<PermissionResourceAddModel>();
+                    foreach (var item in resources)
+                    {
+                        permissionResourceAddModels.Add(new PermissionResourceAddModel
+                        {
+                            PermissionValue = 0,
+                            ResourceId = item.Id,
+                            ResourceName = item.Name
+                        });
+                    }
+                    AddPermissionGroup addPermissionGroup = new AddPermissionGroup(_userService, _actionService, _permissionGroupService);
+                    addPermissionGroup.PermissionResourceAddModels = permissionResourceAddModels;
+                    addPermissionGroup.GroupName = txbName.Text;
+                    addPermissionGroup.ActionDTOs = await _actionService.GetActions();
+                    addPermissionGroup.LoadPermissions(permissionResourceAddModels);
+                    addPermissionGroup.ShowDialog();
+                    this.Close();
                 }
-                AddPermissionGroup addPermissionGroup = new AddPermissionGroup(_userService, _actionService, _permissionGroupService);
-                addPermissionGroup.PermissionResourceAddModels = permissionResourceAddModels;
-                addPermissionGroup.GroupName = txbName.Text;
-                addPermissionGroup.ActionDTOs = await _actionService.GetActions();
-                addPermissionGroup.LoadPermissions(permissionResourceAddModels);
-                addPermissionGroup.ShowDialog();
-                this.Close();
             }
+            catch (UnauthorizedAccessException ex)
+            {
+                MessageBox.Show(ex.Message, "Notice");
+                Application.Exit();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Some problem happened, detail: " + ex.Message);
+                return;
+            }
+            
         }
     }
 }

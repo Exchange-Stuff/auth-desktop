@@ -34,11 +34,14 @@
             toolStripAddGroup = new ToolStripMenuItem();
             usersToolStripMenuItem = new ToolStripMenuItem();
             userPermissionToolStripMenuItem = new ToolStripMenuItem();
+            addNewToolStripMenuItem = new ToolStripMenuItem();
             actionsToolStripMenuItem = new ToolStripMenuItem();
-            manageToolStripMenuItem1 = new ToolStripMenuItem();
+            mngToolStripActionMng = new ToolStripMenuItem();
             profileToolStripMenuItem = new ToolStripMenuItem();
             changePasswordToolStripMenuItem = new ToolStripMenuItem();
             logoutToolStripMenuItem = new ToolStripMenuItem();
+            resourceToolStripMenuItem = new ToolStripMenuItem();
+            toolScriptAddResource = new ToolStripMenuItem();
             txbSearch = new TextBox();
             label1 = new Label();
             label2 = new Label();
@@ -53,7 +56,7 @@
             // 
             // btnRefresh
             // 
-            btnRefresh.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            btnRefresh.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point);
             btnRefresh.Location = new Point(719, 36);
             btnRefresh.Name = "btnRefresh";
             btnRefresh.Size = new Size(69, 30);
@@ -64,7 +67,7 @@
             // 
             // menuStrip1
             // 
-            menuStrip1.Items.AddRange(new ToolStripItem[] { groupsToolStripMenuItem, usersToolStripMenuItem, actionsToolStripMenuItem, profileToolStripMenuItem });
+            menuStrip1.Items.AddRange(new ToolStripItem[] { groupsToolStripMenuItem, usersToolStripMenuItem, actionsToolStripMenuItem, profileToolStripMenuItem, resourceToolStripMenuItem });
             menuStrip1.Location = new Point(0, 0);
             menuStrip1.Name = "menuStrip1";
             menuStrip1.Size = new Size(800, 24);
@@ -87,29 +90,38 @@
             // 
             // usersToolStripMenuItem
             // 
-            usersToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { userPermissionToolStripMenuItem });
+            usersToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { userPermissionToolStripMenuItem, addNewToolStripMenuItem });
             usersToolStripMenuItem.Name = "usersToolStripMenuItem";
-            usersToolStripMenuItem.Size = new Size(47, 20);
-            usersToolStripMenuItem.Text = "Users";
+            usersToolStripMenuItem.Size = new Size(69, 20);
+            usersToolStripMenuItem.Text = "Accounts";
             // 
             // userPermissionToolStripMenuItem
             // 
             userPermissionToolStripMenuItem.Name = "userPermissionToolStripMenuItem";
-            userPermissionToolStripMenuItem.Size = new Size(158, 22);
-            userPermissionToolStripMenuItem.Text = "User permission";
+            userPermissionToolStripMenuItem.Size = new Size(180, 22);
+            userPermissionToolStripMenuItem.Text = "Advance";
+            userPermissionToolStripMenuItem.Click += userPermissionToolStripMenuItem_Click;
+            // 
+            // addNewToolStripMenuItem
+            // 
+            addNewToolStripMenuItem.Name = "addNewToolStripMenuItem";
+            addNewToolStripMenuItem.Size = new Size(180, 22);
+            addNewToolStripMenuItem.Text = "Add new";
+            addNewToolStripMenuItem.Click += addNewToolStripMenuItem_Click;
             // 
             // actionsToolStripMenuItem
             // 
-            actionsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { manageToolStripMenuItem1 });
+            actionsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { mngToolStripActionMng });
             actionsToolStripMenuItem.Name = "actionsToolStripMenuItem";
             actionsToolStripMenuItem.Size = new Size(59, 20);
             actionsToolStripMenuItem.Text = "Actions";
             // 
-            // manageToolStripMenuItem1
+            // mngToolStripActionMng
             // 
-            manageToolStripMenuItem1.Name = "manageToolStripMenuItem1";
-            manageToolStripMenuItem1.Size = new Size(117, 22);
-            manageToolStripMenuItem1.Text = "Manage";
+            mngToolStripActionMng.Name = "mngToolStripActionMng";
+            mngToolStripActionMng.Size = new Size(117, 22);
+            mngToolStripActionMng.Text = "Manage";
+            mngToolStripActionMng.Click += mngToolStripActionMng_Click;
             // 
             // profileToolStripMenuItem
             // 
@@ -130,6 +142,20 @@
             logoutToolStripMenuItem.Size = new Size(168, 22);
             logoutToolStripMenuItem.Text = "Logout";
             // 
+            // resourceToolStripMenuItem
+            // 
+            resourceToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { toolScriptAddResource });
+            resourceToolStripMenuItem.Name = "resourceToolStripMenuItem";
+            resourceToolStripMenuItem.Size = new Size(67, 20);
+            resourceToolStripMenuItem.Text = "Resource";
+            // 
+            // toolScriptAddResource
+            // 
+            toolScriptAddResource.Name = "toolScriptAddResource";
+            toolScriptAddResource.Size = new Size(96, 22);
+            toolScriptAddResource.Text = "Add";
+            toolScriptAddResource.Click += toolScriptAddResource_Click;
+            // 
             // txbSearch
             // 
             txbSearch.Location = new Point(12, 342);
@@ -141,7 +167,7 @@
             // label1
             // 
             label1.AutoSize = true;
-            label1.Font = new Font("Segoe UI Semibold", 14.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            label1.Font = new Font("Segoe UI Semibold", 14.25F, FontStyle.Bold, GraphicsUnit.Point);
             label1.Location = new Point(12, 36);
             label1.Name = "label1";
             label1.Size = new Size(168, 25);
@@ -151,7 +177,7 @@
             // label2
             // 
             label2.AutoSize = true;
-            label2.Font = new Font("Segoe UI Semibold", 14.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            label2.Font = new Font("Segoe UI Semibold", 14.25F, FontStyle.Bold, GraphicsUnit.Point);
             label2.Location = new Point(332, 36);
             label2.Name = "label2";
             label2.Size = new Size(112, 25);
@@ -191,21 +217,22 @@
             // 
             // btnAdvance
             // 
-            btnAdvance.Location = new Point(280, 342);
+            btnAdvance.Location = new Point(186, 340);
             btnAdvance.Name = "btnAdvance";
             btnAdvance.Size = new Size(75, 25);
             btnAdvance.TabIndex = 10;
-            btnAdvance.Text = "Advance";
+            btnAdvance.Text = "Detail..";
             btnAdvance.UseVisualStyleBackColor = true;
             btnAdvance.Click += btnAdvance_Click;
             // 
             // btnChange
             // 
-            btnChange.Location = new Point(194, 342);
+            btnChange.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point);
+            btnChange.Location = new Point(267, 340);
             btnChange.Name = "btnChange";
             btnChange.Size = new Size(75, 25);
             btnChange.TabIndex = 11;
-            btnChange.Text = "Change";
+            btnChange.Text = "Advance";
             btnChange.UseVisualStyleBackColor = true;
             btnChange.Click += btnChange_Click;
             // 
@@ -248,11 +275,14 @@
         private Label label1;
         private Label label2;
         private ToolStripMenuItem toolStripAddGroup;
-        private ToolStripMenuItem manageToolStripMenuItem1;
+        private ToolStripMenuItem mngToolStripActionMng;
         private ToolStripMenuItem logoutToolStripMenuItem;
         private DataGridView dtgvPermissionGroup;
         private DataGridView dtgvPermissions;
         private Button btnAdvance;
         private Button btnChange;
+        private ToolStripMenuItem resourceToolStripMenuItem;
+        private ToolStripMenuItem toolScriptAddResource;
+        private ToolStripMenuItem addNewToolStripMenuItem;
     }
 }

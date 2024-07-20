@@ -11,11 +11,18 @@ namespace AuthApp
         public List<ActionDTO> ListActions = new List<ActionDTO>();
         private List<PermissionRecordEdit> _permissionRecordEdits = new List<PermissionRecordEdit>();
         private readonly IPermissionGroupService _permissionGroupService;
-        private bool _isUpdated = false;
+        private bool _isUpdated = true;
         public PermissionGroupAdvance(IPermissionGroupService permissionGroupService)
         {
             InitializeComponent();
             _permissionGroupService = permissionGroupService;
+            Application.ApplicationExit += new EventHandler(Cut);
+        }
+
+        private async void Cut(object sender, EventArgs e)
+        {
+            await _permissionGroupService.Logout();
+            Application.Exit();
         }
 
         public void LoadPermission(List<PermissionDTO> permissionDTOs)
@@ -59,9 +66,14 @@ namespace AuthApp
                 }
                 dtgvPermissions.CurrentCell = null!;
             }
+            catch (UnauthorizedAccessException ex)
+            {
+                MessageBox.Show(ex.Message, "Notice");
+                Application.Exit();
+            }
             catch (Exception ex)
             {
-                MessageBox.Show($"Can't show permission list, detail: {ex.Message}", "Notice");
+                MessageBox.Show($"Some problem happened, detail: " + ex.Message);
                 return;
             }
 
@@ -123,19 +135,33 @@ namespace AuthApp
 
         private void txbSearchResource_TextChanged(object sender, EventArgs e)
         {
-            if (!string.IsNullOrEmpty((txbSearchResource.Text + "").Trim()))
+            try
             {
-                var permissions = ListPermission
-                    .Where(x => x.Resource.Name.ToLower().Contains(txbSearchResource.Text.ToLower()));
-                LoadPermission(permissions.ToList());
-            }
-            else
-            {
-                if (ListPermission != null)
+                if (!string.IsNullOrEmpty((txbSearchResource.Text + "").Trim()))
                 {
-                    LoadPermission(ListPermission);
+                    var permissions = ListPermission
+                        .Where(x => x.Resource.Name.ToLower().Contains(txbSearchResource.Text.ToLower()));
+                    LoadPermission(permissions.ToList());
+                }
+                else
+                {
+                    if (ListPermission != null)
+                    {
+                        LoadPermission(ListPermission);
+                    }
                 }
             }
+            catch (UnauthorizedAccessException ex)
+            {
+                MessageBox.Show(ex.Message, "Notice");
+                Application.Exit();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Some problem happened, detail: " + ex.Message);
+                return;
+            }
+
         }
 
         private async void UpdatePermission()
@@ -148,13 +174,13 @@ namespace AuthApp
                 {
                     if (roleId == Guid.Empty)
                     {
-                        roleId = item.Role.Id;
+                        roleId = item.PermissionGroup.Id;
                     }
                     resourceRecords.Add(new ResourceRecord(item.Resource.Id, item.PermissionValue));
                 }
                 UpdatePermissionGroupModel updatePermissionGroupModel = new UpdatePermissionGroupModel
                 {
-                    RoleId = roleId,
+                    PermissionGroupId = roleId,
                     ResourceValueRecords = resourceRecords
                 };
                 var rs = await _permissionGroupService.UpdateGroupPermission(updatePermissionGroupModel);
@@ -167,16 +193,35 @@ namespace AuthApp
                 MessageBox.Show("Some problem, can't update permissions");
                 return;
             }
+            catch (UnauthorizedAccessException ex)
+            {
+                MessageBox.Show(ex.Message, "Notice");
+                Application.Exit();
+            }
             catch (Exception ex)
             {
-                MessageBox.Show("Some problem happened, details: " + ex.Message);
+                MessageBox.Show($"Some problem happened, detail: " + ex.Message);
                 return;
             }
         }
 
         private void btnSave_Click(object sender, EventArgs e)
         {
-            UpdatePermission();
+            try
+            {
+                UpdatePermission();
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                MessageBox.Show(ex.Message, "Notice");
+                Application.Exit();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Some problem happened, detail: " + ex.Message);
+                return;
+            }
+
         }
 
         private void dtgvPermissions_CurrentCellDirtyStateChanged(object sender, EventArgs e)
@@ -189,22 +234,37 @@ namespace AuthApp
 
         private void dtgvPermissions_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
-            if (e.RowIndex >= 0 && e.ColumnIndex > 0)
+            try
             {
-                var row = dtgvPermissions.Rows[e.RowIndex];
-                var resourceId = (Guid)row.Tag!;
-                if (resourceId != Guid.Empty)
+                if (e.RowIndex >= 0 && e.ColumnIndex > 0)
                 {
-                    var permission = ListPermission.Where(x => x.Resource.Id == resourceId).FirstOrDefault()!;
-                    if (permission != null)
+                    _isUpdated = false;
+                    var row = dtgvPermissions.Rows[e.RowIndex];
+                    var resourceId = (Guid)row.Tag!;
+                    if (resourceId != Guid.Empty)
                     {
-                        var currentPermisisonValue = permission.PermissionValue;
-                        var binPV = ReverseString(DecimalToBinary(currentPermisisonValue));
-                        ListPermission.Where(x => x.Resource.Id == resourceId).FirstOrDefault()!.PermissionValue = GetNewValue(binPV, e.ColumnIndex, (bool)row.Cells[e.ColumnIndex].Value);
+                        var permission = ListPermission.Where(x => x.Resource.Id == resourceId).FirstOrDefault()!;
+                        if (permission != null)
+                        {
+                            var currentPermisisonValue = permission.PermissionValue;
+                            var binPV = ReverseString(DecimalToBinary(currentPermisisonValue));
+                            ListPermission.Where(x => x.Resource.Id == resourceId).FirstOrDefault()!.PermissionValue = GetNewValue(binPV, e.ColumnIndex, (bool)row.Cells[e.ColumnIndex].Value);
+                        }
                     }
+                    _isUpdated = false;
                 }
-                _isUpdated = false;
             }
+            catch (UnauthorizedAccessException ex)
+            {
+                MessageBox.Show(ex.Message, "Notice");
+                Application.Exit();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Some problem happened, detail: " + ex.Message);
+                return;
+            }
+
         }
 
         private int GetNewValue(char[] currentPermission, int columnIndex, bool value)

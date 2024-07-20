@@ -4,8 +4,7 @@
     {
         public Guid Id { get; set; }
         public int PermissionValue { get; set; }
-        public RoleDTO Role { get; set; }
+        public PermissionGroupDTO PermissionGroup { get; set; }
         public ResourceDTO Resource { get; set; }
-
     }
 }

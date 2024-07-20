@@ -1,6 +1,7 @@
 ﻿using AuthApp.Service.DTOs;
 using AuthApp.Service.Models;
 using AuthApp.Service.Services;
+using Microsoft.VisualBasic.ApplicationServices;
 using System.ComponentModel.Design;
 
 namespace AuthApp
@@ -21,31 +22,79 @@ namespace AuthApp
             _permissionGroupService = permissionGroupService;
             _resourceService = resourceService;
             LoadData();
+            Application.ApplicationExit += new EventHandler(Cut);
+        }
+
+        private async void Cut(object sender, EventArgs e)
+        {
+            await _userService.Logout();
+            Application.Exit();
         }
 
         private void LoadData()
         {
-            LoadPermissionGroup();
-            LoadPermission();
+            try
+            {
+                LoadPermissionGroup();
+                LoadPermission();
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                MessageBox.Show(ex.Message, "Notice");
+                Application.Exit();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Some problem happened, detail: " + ex.Message);
+                return;
+            }
         }
+
         private async void LoadPermissionGroup()
         {
-            _permissionGroupDTOs = await _permissionGroupService.GetPermissionGroupDTOs();
-            if (_permissionGroupDTOs == null)
+            try
             {
-                _permissionGroupDTOs = new List<PermissionGroupDTO>();
+                _permissionGroupDTOs = await _permissionGroupService.GetPermissionGroupDTOs();
+                if (_permissionGroupDTOs == null)
+                {
+                    _permissionGroupDTOs = new List<PermissionGroupDTO>();
+                }
+                DisplayPermissionGroup(_permissionGroupDTOs);
             }
-            DisplayPermissionGroup(_permissionGroupDTOs);
+            catch (UnauthorizedAccessException ex)
+            {
+                MessageBox.Show(ex.Message, "Notice");
+                Application.Exit();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Some problem happened, detail: " + ex.Message);
+                return;
+            }
+
         }
 
         private async void LoadPermission()
         {
-            _permissionDTOs = await _permissionGroupService.GetPermissionDTO();
-            if (_permissionDTOs == null)
+            try
             {
-                _permissionDTOs = new List<PermissionDTO>();
+                _permissionDTOs = await _permissionGroupService.GetPermissionDTO();
+                if (_permissionDTOs == null)
+                {
+                    _permissionDTOs = new List<PermissionDTO>();
+                }
+                DisplayPermission(_permissionDTOs);
             }
-            DisplayPermission(_permissionDTOs);
+            catch (UnauthorizedAccessException ex)
+            {
+                MessageBox.Show(ex.Message, "Notice");
+                Application.Exit();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Some problem happened, detail: " + ex.Message);
+                return;
+            }
         }
 
         private void DisplayPermission(List<PermissionDTO> permissionDTOs)
@@ -58,19 +107,23 @@ namespace AuthApp
                 dtgvPermissions.AutoGenerateColumns = false;
                 dtgvPermissions.Columns.Add("PermissionGroupName", "Permission Group Name");
                 dtgvPermissions.Columns.Add("ResourceName", "Resource Name");
-                dtgvPermissions.Columns.Add("PermissionValue", "Permission Value");
                 dtgvPermissions.RowHeadersVisible = false;
                 dtgvPermissions.AllowUserToAddRows = false;
                 foreach (var item in permissionDTOs)
                 {
-                    dtgvPermissions.Rows.Add(item.Role.Name, item.Resource.Name, item.PermissionValue);
+                    dtgvPermissions.Rows.Add(item.PermissionGroup.Name, item.Resource.Name);
                     dtgvPermissions.Tag = item.Id;
                 }
                 dtgvPermissions.CurrentCell = null!;
             }
+            catch (UnauthorizedAccessException ex)
+            {
+                MessageBox.Show(ex.Message, "Notice");
+                Application.Exit();
+            }
             catch (Exception ex)
             {
-                MessageBox.Show($"Can't show permission list, detail: {ex.Message}", "Notice");
+                MessageBox.Show($"Some problem happened, detail: " + ex.Message);
                 return;
             }
         }
@@ -96,9 +149,15 @@ namespace AuthApp
                 }
                 dtgvPermissionGroup.CurrentCell = null;
             }
+            catch (UnauthorizedAccessException ex)
+            {
+                MessageBox.Show(ex.Message, "Notice");
+                Application.Exit();
+            }
             catch (Exception ex)
             {
-                MessageBox.Show($"Can't show permission group list, detail: {ex.Message}", "Notice");
+                MessageBox.Show($"Some problem happened, detail: " + ex.Message);
+                return;
             }
         }
 
@@ -114,7 +173,7 @@ namespace AuthApp
                         var permissionGroupId = (Guid)dtgvPermissionGroup.Rows[index].Tag!;
                         if (_permissionDTOs != null && _permissionDTOs.Count > 0)
                         {
-                            var permissions = _permissionDTOs.Where(x => x.Role.Id == permissionGroupId);
+                            var permissions = _permissionDTOs.Where(x => x.PermissionGroup.Id == permissionGroupId);
                             if (permissions != null)
                             {
                                 DisplayPermission(permissions.ToList());
@@ -128,20 +187,38 @@ namespace AuthApp
                 //    LoadPermission();
                 //}
             }
+            catch (UnauthorizedAccessException ex)
+            {
+                MessageBox.Show(ex.Message, "Notice");
+                Application.Exit();
+            }
             catch (Exception ex)
             {
-                MessageBox.Show("Some proble here, detail: " + ex.Message);
+                MessageBox.Show($"Some problem happened, detail: " + ex.Message);
                 return;
             }
         }
 
         private void btnRefresh_Click(object sender, EventArgs e)
         {
-            LoadData();
+            try
+            {
+                LoadData();
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                MessageBox.Show(ex.Message, "Notice");
+                Application.Exit();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Some problem happened, detail: " + ex.Message);
+                return;
+            }
         }
 
         /// <summary>
-        /// Now Lookeach Role <=> Permission Group
+        /// Now Lookeach PermissionGroup <=> Permission Group
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -153,7 +230,7 @@ namespace AuthApp
                 {
                     var permissionGroup = _permissionGroupDTOs.Where(x => x.Name.ToLower().Contains(txbSearch.Text.Trim()));
                     var permissionGroupId = permissionGroup.Select(x => x.Id);
-                    var permissions = _permissionDTOs.Where(x => permissionGroupId.Contains(x.Role.Id));
+                    var permissions = _permissionDTOs.Where(x => permissionGroupId.Contains(x.PermissionGroup.Id));
                     DisplayPermissionGroup(permissionGroup.ToList());
                     if (permissions != null)
                     {
@@ -185,9 +262,15 @@ namespace AuthApp
                     }
                 }
             }
+            catch (UnauthorizedAccessException ex)
+            {
+                MessageBox.Show(ex.Message, "Notice");
+                Application.Exit();
+            }
             catch (Exception ex)
             {
-                MessageBox.Show("Some problem happened, detai: " + ex.Message);
+                MessageBox.Show($"Some problem happened, detail: " + ex.Message);
+                return;
             }
         }
 
@@ -203,7 +286,7 @@ namespace AuthApp
                         var permissionGroupId = (Guid)dtgvPermissionGroup.Rows[index].Tag!;
                         if (_permissionDTOs != null && _permissionDTOs.Count > 0)
                         {
-                            var permissions = _permissionDTOs.Where(x => x.Role.Id == permissionGroupId);
+                            var permissions = _permissionDTOs.Where(x => x.PermissionGroup.Id == permissionGroupId);
                             var action = await _actionService.GetActions();
                             PermissionGroupAdvance permissionGroupAdvance = new PermissionGroupAdvance(_permissionGroupService);
                             permissionGroupAdvance.ListPermission = permissions.ToList();
@@ -215,10 +298,17 @@ namespace AuthApp
                     }
                 }
             }
+            catch (UnauthorizedAccessException ex)
+            {
+                MessageBox.Show(ex.Message, "Notice");
+                Application.Exit();
+            }
             catch (Exception ex)
             {
                 MessageBox.Show($"Some problem happened, detail: " + ex.Message);
+                return;
             }
+
         }
 
         private void toolStripAddGroup_Click(object sender, EventArgs e)
@@ -229,6 +319,11 @@ namespace AuthApp
                 permissionGroupName.ShowDialog();
                 LoadData();
             }
+            catch (UnauthorizedAccessException ex)
+            {
+                MessageBox.Show(ex.Message, "Notice");
+                Application.Exit();
+            }
             catch (Exception ex)
             {
                 MessageBox.Show("Some problem happened, detail: " + ex.Message);
@@ -238,49 +333,133 @@ namespace AuthApp
 
         private async void btnChange_Click(object sender, EventArgs e)
         {
-            if (dtgvPermissionGroup.SelectedCells.Count > 0)
+            try
             {
-                Guid permissionGroupId = (Guid)dtgvPermissionGroup.Rows[dtgvPermissionGroup.SelectedCells[0].RowIndex].Tag!;
-                if (permissionGroupId != Guid.Empty)
+                if (dtgvPermissionGroup.SelectedCells.Count > 0)
                 {
-                    var permissionGroup = _permissionGroupDTOs.FirstOrDefault(x => x.Id == permissionGroupId)!;
-                    if (permissionGroup != null)
+                    Guid permissionGroupId = (Guid)dtgvPermissionGroup.Rows[dtgvPermissionGroup.SelectedCells[0].RowIndex].Tag!;
+                    if (permissionGroupId != Guid.Empty)
                     {
-                        var resources = await _resourceService.GetResources();
-                        var permissionOfGroup = await _permissionGroupService.GetPermissionDTO();
-                        if (permissionOfGroup.Any())
+                        var permissionGroup = _permissionGroupDTOs.FirstOrDefault(x => x.Id == permissionGroupId)!;
+                        if (permissionGroup != null)
                         {
-                            List<UpdateResourcePermissionGroupModel> updateResourcePermissionGroupModels = new List<UpdateResourcePermissionGroupModel>();
-                            foreach (var item in resources)
+                            var resources = await _resourceService.GetResources();
+                            var permissionOfGroup = await _permissionGroupService.GetPermissionDTO();
+                            if (permissionOfGroup.Any())
                             {
-                                var pNow = permissionOfGroup.FirstOrDefault(x => x.Resource.Id == item.Id && x.Role.Id == permissionGroupId)!;
-                                UpdateResourcePermissionGroupModel updateResourcePermissionGroupModel = new UpdateResourcePermissionGroupModel
+                                List<UpdateResourcePermissionGroupModel> updateResourcePermissionGroupModels = new List<UpdateResourcePermissionGroupModel>();
+                                foreach (var item in resources)
                                 {
-                                    ResourceId = item.Id,
-                                    ResourceName = item.Name,
-                                    FullControl = false,
-                                    PermissionValue = 0,
-                                    Selected = false
-                                };
-                                if (pNow != null!)
-                                {
-                                    updateResourcePermissionGroupModel.PermissionValue = pNow.PermissionValue;
-                                    updateResourcePermissionGroupModel.Selected = true;
+                                    var pNow = permissionOfGroup.FirstOrDefault(x => x.Resource.Id == item.Id && x.PermissionGroup.Id == permissionGroupId)!;
+                                    UpdateResourcePermissionGroupModel updateResourcePermissionGroupModel = new UpdateResourcePermissionGroupModel
+                                    {
+                                        ResourceId = item.Id,
+                                        ResourceName = item.Name,
+                                        FullControl = false,
+                                        PermissionValue = 0,
+                                        Selected = false
+                                    };
+                                    if (pNow != null!)
+                                    {
+                                        updateResourcePermissionGroupModel.PermissionValue = pNow.PermissionValue;
+                                        updateResourcePermissionGroupModel.Selected = true;
+                                    }
+                                    updateResourcePermissionGroupModels.Add(updateResourcePermissionGroupModel);
                                 }
-                                updateResourcePermissionGroupModels.Add(updateResourcePermissionGroupModel);
+                                UpdatePermissionGroup updatePermissionGroup = new UpdatePermissionGroup(_permissionGroupService,_actionService);
+                                updatePermissionGroup.PermissionGroupId = permissionGroupId;
+                                updatePermissionGroup.lbPermissionGroupName.Text = permissionGroup.Name;
+                                updatePermissionGroup.UpdateResourcePermissionGroupModels = updateResourcePermissionGroupModels;
+                                updatePermissionGroup.ActionDTOs = await _actionService.GetActions();
+                                updatePermissionGroup.LoadPermission(updateResourcePermissionGroupModels);
+                                updatePermissionGroup.ShowDialog();
+                                LoadData();
                             }
-                            UpdatePermissionGroup updatePermissionGroup = new UpdatePermissionGroup(_permissionGroupService);
-                            updatePermissionGroup.PermissionGroupId = permissionGroupId;
-                            updatePermissionGroup.lbPermissionGroupName.Text = permissionGroup.Name;
-                            updatePermissionGroup.UpdateResourcePermissionGroupModels = updateResourcePermissionGroupModels;
-                            updatePermissionGroup.ActionDTOs = await _actionService.GetActions();
-                            updatePermissionGroup.LoadPermission(updateResourcePermissionGroupModels);
-                            updatePermissionGroup.ShowDialog();
-                            LoadData();
                         }
                     }
                 }
             }
+            catch (UnauthorizedAccessException ex)
+            {
+                MessageBox.Show(ex.Message, "Notice");
+                Application.Exit();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Some problem happened, detail: " + ex.Message);
+                return;
+            }
+        }
+
+        private async void userPermissionToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                List<AccountViewModel> userAddGroupPermissions = await _userService.GetAccounts();
+                UserOverview userOverview = new UserOverview(_permissionGroupService, _userService);
+                userOverview.UserAddGroupPermissions = userAddGroupPermissions;
+                userOverview.LoadUser(userAddGroupPermissions);
+                userOverview.ShowDialog();
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                MessageBox.Show(ex.Message, "Notice");
+                Application.Exit();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Some problem happened, detail: " + ex.Message);
+                return;
+            }
+        }
+
+        private async void mngToolStripActionMng_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                ActionOverview actionOverview = new ActionOverview(_actionService);
+                var actions = await _actionService.GetActions();
+                actionOverview.ActionDTOs = actions;
+                actionOverview.LoadAction(actions);
+                actionOverview.ShowDialog();
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                MessageBox.Show(ex.Message, "Notice");
+                Application.Exit();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Some problem happened, detail: " + ex.Message);
+                return;
+            }
+        }
+
+        private void toolScriptAddResource_Click(object sender, EventArgs e)
+        {
+            AddResource addResource = new AddResource(_resourceService);
+            addResource.ShowDialog();
+        }
+
+        private async void addNewToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            AddNewUser addNewUser = new AddNewUser(_userService);
+            var permissionGroupDtos = await _permissionGroupService.GetPermissionGroupDTOs();
+            var permissionGroups = await _permissionGroupService.GetPermissionGroupDTOs();
+            List<PermissionGroupUserUpdate> permissionGroupUserUpdates = new List<PermissionGroupUserUpdate>();
+            foreach (var item in permissionGroups)
+            {
+                PermissionGroupUserUpdate permissionGroupUserUpdate = new PermissionGroupUserUpdate
+                {
+                    Id = item.Id,
+                    Name = item.Name,
+                    Select = false
+                };
+                permissionGroupUserUpdates.Add(permissionGroupUserUpdate);
+            }
+            addNewUser.PermissionGroupUserUpdates = permissionGroupUserUpdates;
+            addNewUser.LoadPermissionGroup(permissionGroupUserUpdates);
+            addNewUser.ShowDialog();
         }
     }
 }

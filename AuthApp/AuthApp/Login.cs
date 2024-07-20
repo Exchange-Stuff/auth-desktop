@@ -51,29 +51,28 @@ namespace AuthApp
                     VisibleControl(true);
                     return;
                 }
-                ClaimDTO claim = null!;
-                Task loginTask =
-                    Task.Run(async () => claim =
-                    await _authService.Login(txbUsername.Text.Trim(), txbPassword.Text.Trim()));
-                loginTask.Wait();
-                if (loginTask.IsCompleted)
+                ClaimDTO claim = await _authService.Login(txbUsername.Text.Trim(), txbPassword.Text.Trim());
+
+                if (claim == null!)
                 {
-                    if (claim == null!)
-                    {
-                        MessageBox.Show("Login fail, wrong username or password", "Notice");
-                        VisibleControl(true);
-                        return;
-                    }
-                    else
-                    {
-                        Home home = new Home(_permissionGroupService, _actionService, _resourceService, _userService);
-                        VisibleControl(true);
-                        home.ShowDialog();
-                        this.Close();
-                        home.Close();
-                    }
+                    MessageBox.Show("Login fail, wrong username or password", "Notice");
+                    VisibleControl(true);
+                    return;
+                }
+                else
+                {
+                    Home home = new Home(_permissionGroupService, _actionService, _resourceService, _userService);
+                    VisibleControl(true);
+                    home.ShowDialog();
+                    this.Close();
+                    home.Close();
                 }
                 VisibleControl(true);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                MessageBox.Show(ex.Message, "Notice");
+                Application.Exit();
             }
             catch (Exception ex)
             {
@@ -81,6 +80,8 @@ namespace AuthApp
                 VisibleControl(true);
                 return;
             }
+
+
         }
     }
 }

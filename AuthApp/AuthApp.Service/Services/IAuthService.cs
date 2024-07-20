@@ -1,16 +1,20 @@
 ﻿using AuthApp.Service.Constants;
 using AuthApp.Service.DTOs;
+using AuthApp.Service.Models;
+using AuthApp.Service.Statics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.IdentityModel.Tokens.Jwt;
+using static System.Net.WebRequestMethods;
 
 namespace AuthApp.Service.Services
 {
     public interface IAuthService
     {
         Task<ClaimDTO> Login(string username, string password);
+        Task Logout();
     }
 
     public class AuthService : IAuthService
@@ -21,7 +25,7 @@ namespace AuthApp.Service.Services
 
         public AuthService(IConfiguration configuration)
         {
-            _configuration= configuration;
+            _configuration = configuration;
             _configuration.GetSection(nameof(JwtDTO)).Bind(_jwtDTO);
         }
         public async Task<ClaimDTO> Login(string username, string password)
@@ -30,6 +34,8 @@ namespace AuthApp.Service.Services
                 throw new Exception("Username and password is not empty");
             using (HttpClient httpClient = new HttpClient())
             {
+                httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", TokenValue.Token);
+
                 var param = new
                 {
                     username = username,
@@ -38,6 +44,8 @@ namespace AuthApp.Service.Services
                 string dataJson = JsonConvert.SerializeObject(param);
                 StringContent content = new StringContent(dataJson, System.Text.Encoding.UTF8, _mediaType);
                 HttpResponseMessage httpResponseMessage = await httpClient.PostAsync(EndpointAPI.SUPER_ADMIN_LOGIN_POST, content);
+                if (httpResponseMessage.StatusCode == System.Net.HttpStatusCode.Unauthorized) throw new UnauthorizedAccessException("Login session expired");
+
                 if (httpResponseMessage.IsSuccessStatusCode)
                 {
                     string responseData = await httpResponseMessage.Content.ReadAsStringAsync();
@@ -49,6 +57,7 @@ namespace AuthApp.Service.Services
                             var token = jobj["value"] + "";
                             if (!string.IsNullOrEmpty(token))
                             {
+                                TokenValue.Token = token;
                                 return GetClaimDTOByAccessTokenSynchronous(token);
                             }
                         }
@@ -86,7 +95,7 @@ namespace AuthApp.Service.Services
                 }, out SecurityToken securityToken);
                 var jwtToken = (JwtSecurityToken)securityToken;
                 var id = jwtToken.Claims.First(x => x.Type == "nameid")!.Value;
-                if (Guid.TryParse(id, out Guid newId) is false )
+                if (Guid.TryParse(id, out Guid newId) is false)
                 {
                     return null!;
                 }
@@ -98,6 +107,15 @@ namespace AuthApp.Service.Services
             catch (Exception ex)
             {
                 throw new Exception(ex.Message);
+            }
+        }
+
+        public async Task Logout()
+        {
+            using (HttpClient http = new HttpClient())
+            {
+                http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", TokenValue.Token);
+                HttpResponseMessage httpResponse = await http.PostAsync(EndpointAPI.LOGOUT_POST,null!);
             }
         }
     }

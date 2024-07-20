@@ -1,7 +1,7 @@
 ﻿namespace AuthApp.Service.Models
 {
     /// <summary>
-    /// Role <=> Permission group
+    /// PermissionGroup <=> Permission group
     /// </summary>
     public class PermissionResourceAddModel
     {

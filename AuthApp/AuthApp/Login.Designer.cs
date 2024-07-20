@@ -53,7 +53,7 @@
             txbPassword.Name = "txbPassword";
             txbPassword.Size = new Size(290, 23);
             txbPassword.TabIndex = 1;
-            txbPassword.Text = "string";
+            txbPassword.Text = "adminadmin";
             txbPassword.UseSystemPasswordChar = true;
             // 
             // label1

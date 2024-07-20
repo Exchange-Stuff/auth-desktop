@@ -88,6 +88,7 @@
             Name = "UpdatePermissionGroup";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "Update Permission Group";
+            FormClosing += UpdatePermissionGroup_FormClosing;
             ((System.ComponentModel.ISupportInitialize)dtgvPermission).EndInit();
             ResumeLayout(false);
             PerformLayout();
